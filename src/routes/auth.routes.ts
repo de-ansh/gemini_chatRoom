@@ -12,7 +12,7 @@ import {
   allowedFields,
   validate
 } from '../middleware/validation.middleware';
-import { simpleAuthenticate } from '@/middleware/auth.middleware';
+import { simpleAuthenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 

@@ -24,5 +24,5 @@ RUN npm prune --production
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"] 
+# Start the application with module-alias support
+CMD ["node", "-r", "module-alias/register", "dist/index.js"] 

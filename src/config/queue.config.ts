@@ -4,14 +4,52 @@ import { Logger } from '../utils/logger';
 export class QueueConfig {
   private static logger = Logger.getInstance();
   
+  // Parse Redis URL to extract connection details
+  private static parseRedisUrl(): { host: string; port: number; password?: string; db?: number } {
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      return {
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379', 10),
+        password: process.env.REDIS_PASSWORD || 'redis123',
+        db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
+      };
+    }
+
+    try {
+      const url = new URL(redisUrl);
+      const result: { host: string; port: number; password?: string; db?: number } = {
+        host: url.hostname,
+        port: parseInt(url.port || '6379', 10),
+        db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
+      };
+      
+      if (url.password) {
+        result.password = url.password;
+      }
+      
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to parse REDIS_URL:', error);
+      return {
+        host: 'localhost',
+        port: 6379,
+        password: 'redis123',
+        db: 1,
+      };
+    }
+  }
+  
   // Redis connection options for BullMQ
   static getRedisConnection(): ConnectionOptions {
+    const config = this.parseRedisUrl();
+    
     return {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD || 'redis123',
-      db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10), // Use different DB for queues
-      maxRetriesPerRequest: 3,
+      host: config.host,
+      port: config.port,
+      password: config.password,
+      db: config.db,
+      maxRetriesPerRequest: null, // Required by BullMQ
       retryDelayOnFailover: 100,
       enableReadyCheck: false,
       lazyConnect: true,

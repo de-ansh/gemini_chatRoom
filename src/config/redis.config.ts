@@ -7,18 +7,35 @@ export class RedisConfig {
 
   static async initialize(): Promise<void> {
     try {
-      this.client = createClient({
-        url: process.env.REDIS_URL || 'redis://:redis123@localhost:6379',
-        password: process.env.REDIS_PASSWORD || 'redis123',
-        socket: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          reconnectStrategy: (retries) => {
-            this.logger.warn(`Redis reconnection attempt ${retries}`);
-            return Math.min(retries * 50, 500);
+      // Use REDIS_URL if provided (Railway), otherwise use local config
+      const redisUrl = process.env.REDIS_URL;
+      
+      if (redisUrl) {
+        // Use the REDIS_URL directly for Railway deployment
+        this.client = createClient({
+          url: redisUrl,
+          socket: {
+            reconnectStrategy: (retries) => {
+              this.logger.warn(`Redis reconnection attempt ${retries}`);
+              return Math.min(retries * 50, 500);
+            }
           }
-        }
-      });
+        });
+      } else {
+        // Fallback for local development
+        this.client = createClient({
+          url: 'redis://:redis123@localhost:6379',
+          password: process.env.REDIS_PASSWORD || 'redis123',
+          socket: {
+            host: process.env.REDIS_HOST || 'localhost',
+            port: parseInt(process.env.REDIS_PORT || '6379', 10),
+            reconnectStrategy: (retries) => {
+              this.logger.warn(`Redis reconnection attempt ${retries}`);
+              return Math.min(retries * 50, 500);
+            }
+          }
+        });
+      }
 
       // Error handling
       this.client.on('error', (error) => {

@@ -1,69 +1,45 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
   postgres:
     image: postgres:15-alpine
-    container_name: kukuva_postgres
     environment:
       POSTGRES_DB: kukuva_chatroom
       POSTGRES_USER: kukuva_user
       POSTGRES_PASSWORD: kukuva_password
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - kukuva_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U kukuva_user -d kukuva_chatroom"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: kukuva_redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - kukuva_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Node.js Application
-  app:
-    build: .
-    container_name: kukuva_app
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://kukuva_user:kukuva_password@postgres:5432/kukuva_chatroom
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - kukuva_network
-    restart: unless-stopped
-
 volumes:
   postgres_data:
-  redis_data:
-
-networks:
-  kukuva_network:
-    driver: bridge 
+  redis_data: 

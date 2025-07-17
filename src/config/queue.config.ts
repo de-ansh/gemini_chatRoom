@@ -4,59 +4,40 @@ import { Logger } from '../utils/logger';
 export class QueueConfig {
   private static logger = Logger.getInstance();
   
-  // Parse Redis URL to extract connection details
-  private static parseRedisUrl(): ConnectionOptions {
-    const redisUrl = process.env.REDIS_URL;
-    if (!redisUrl) {
-      return {
-        family: 0,
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379', 10),
-        db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
-        maxRetriesPerRequest: null, // Required by BullMQ
-        retryDelayOnFailover: 100,
-        enableReadyCheck: false,
-        lazyConnect: true,
-      };
-    }
-
-    try {
-      const url = new URL(redisUrl);
-      const result: ConnectionOptions = {
-        family: 0,
-        host: url.hostname,
-        port: parseInt(url.port || '6379', 10),
-        db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
-        maxRetriesPerRequest: null, // Required by BullMQ
-        retryDelayOnFailover: 100,
-        enableReadyCheck: false,
-        lazyConnect: true,
-      };
-      
-      // Add password if present in URL
-      if (url.password) {
-        (result as any).password = url.password;
-      }
-      
-      return result;
-    } catch (error) {
-      this.logger.error('Failed to parse REDIS_URL:', error);
-      return {
-        family: 0,
-        host: 'localhost',
-        port: 6379,
-        db: 1,
-        maxRetriesPerRequest: null,
-        retryDelayOnFailover: 100,
-        enableReadyCheck: false,
-        lazyConnect: true,
-      };
-    }
-  }
-  
   // Redis connection options for BullMQ
   static getRedisConnection(): ConnectionOptions {
-    return this.parseRedisUrl();
+    const redisUrl = process.env.REDIS_URL;
+    
+    if (redisUrl) {
+      // For Railway deployment - parse URL for BullMQ
+      try {
+        const url = new URL(redisUrl);
+        return {
+          host: url.hostname,
+          port: parseInt(url.port || '6379', 10),
+          password: url.password || undefined,
+          db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
+          maxRetriesPerRequest: null, // Required by BullMQ
+          retryDelayOnFailover: 100,
+          enableReadyCheck: false,
+          lazyConnect: true,
+        };
+      } catch (error) {
+        this.logger.error('Failed to parse REDIS_URL:', error);
+      }
+    }
+    
+    // Fallback for local development
+    return {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+      password: process.env.REDIS_PASSWORD || 'redis123',
+      db: parseInt(process.env.REDIS_QUEUE_DB || '1', 10),
+      maxRetriesPerRequest: null, // Required by BullMQ
+      retryDelayOnFailover: 100,
+      enableReadyCheck: false,
+      lazyConnect: true,
+    };
   }
 
   // Default queue options

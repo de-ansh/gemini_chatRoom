@@ -3,311 +3,258 @@ import { Logger } from '../utils/logger';
 
 export class CacheService {
   private static logger = Logger.getInstance();
-  private static readonly DEFAULT_TTL = 300; // 5 minutes
-  
-  // Cache key prefixes
-  private static readonly KEYS = {
-    CHATROOM_LIST: 'chatroom:list',
-    CHATROOM_DETAIL: 'chatroom:detail',
-    CHATROOM_SEARCH: 'chatroom:search',
-    CHATROOM_STATS: 'chatroom:stats',
-    MESSAGE_STATS: 'message:stats',
-    USER_CHATROOMS: 'user:chatrooms'
-  };
-
-  // TTL configurations (in seconds)
-  private static readonly TTL = {
-    CHATROOM_LIST: 300,    // 5 minutes
-    CHATROOM_DETAIL: 600,  // 10 minutes
-    CHATROOM_SEARCH: 180,  // 3 minutes
-    CHATROOM_STATS: 900,   // 15 minutes
-    MESSAGE_STATS: 600,    // 10 minutes
-    USER_CHATROOMS: 300    // 5 minutes
-  };
+  private static redisClient = RedisConfig.getCacheRedisClient();
 
   /**
-   * Generate cache key for user chatrooms
+   * Set a key-value pair in cache
    */
-  private static getUserChatroomsKey(userId: string, page: number, limit: number): string {
-    return `${this.KEYS.USER_CHATROOMS}:${userId}:${page}:${limit}`;
-  }
-
-  /**
-   * Generate cache key for chatroom details
-   */
-  private static getChatroomDetailKey(chatroomId: string, messagesPage: number, messagesLimit: number): string {
-    return `${this.KEYS.CHATROOM_DETAIL}:${chatroomId}:${messagesPage}:${messagesLimit}`;
-  }
-
-  /**
-   * Generate cache key for chatroom search
-   */
-  private static getChatroomSearchKey(userId: string, query: string, page: number, limit: number): string {
-    const sanitizedQuery = query.replace(/[^a-zA-Z0-9]/g, '_');
-    return `${this.KEYS.CHATROOM_SEARCH}:${userId}:${sanitizedQuery}:${page}:${limit}`;
-  }
-
-  /**
-   * Generate cache key for chatroom stats
-   */
-  private static getChatroomStatsKey(userId: string): string {
-    return `${this.KEYS.CHATROOM_STATS}:${userId}`;
-  }
-
-  /**
-   * Generate cache key for message stats
-   */
-  private static getMessageStatsKey(chatroomId: string): string {
-    return `${this.KEYS.MESSAGE_STATS}:${chatroomId}`;
-  }
-
-  /**
-   * Get cached data
-   */
-  static async get<T>(key: string): Promise<T | null> {
+  static async set(key: string, value: string, ttl?: number): Promise<void> {
     try {
-      const redis = RedisConfig.getClient();
-      const cached = await redis.get(key);
-      
-      if (cached) {
-        this.logger.debug(`Cache hit for key: ${key}`);
-        return JSON.parse(cached);
+      if (ttl) {
+        await this.redisClient.setex(key, ttl, value);
+      } else {
+        await this.redisClient.set(key, value);
       }
-      
-      this.logger.debug(`Cache miss for key: ${key}`);
+    } catch (error) {
+      this.logger.error(`Cache SET error for key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a value from cache
+   */
+  static async get(key: string): Promise<string | null> {
+    try {
+      return await this.redisClient.get(key);
+    } catch (error) {
+      this.logger.error(`Cache GET error for key ${key}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Delete a key from cache
+   */
+  static async del(key: string): Promise<number> {
+    try {
+      return await this.redisClient.del(key);
+    } catch (error) {
+      this.logger.error(`Cache DEL error for key ${key}:`, error);
+      return 0;
+    }
+  }
+
+  /**
+   * Check if a key exists in cache
+   */
+  static async exists(key: string): Promise<boolean> {
+    try {
+      const result = await this.redisClient.exists(key);
+      return result === 1;
+    } catch (error) {
+      this.logger.error(`Cache EXISTS error for key ${key}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Set a JSON object in cache
+   */
+  static async setJson(key: string, value: any, ttl?: number): Promise<void> {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await this.set(key, jsonValue, ttl);
+    } catch (error) {
+      this.logger.error(`Cache SETJSON error for key ${key}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a JSON object from cache
+   */
+  static async getJson<T>(key: string): Promise<T | null> {
+    try {
+      const value = await this.get(key);
+      if (value) {
+        return JSON.parse(value) as T;
+      }
       return null;
     } catch (error) {
-      this.logger.error('Cache get failed:', error);
+      this.logger.error(`Cache GETJSON error for key ${key}:`, error);
       return null;
     }
   }
 
   /**
-   * Set cached data with TTL
+   * Clear cache by pattern
    */
-  static async set(key: string, data: any, ttl: number = this.DEFAULT_TTL): Promise<void> {
+  static async clearPattern(pattern: string): Promise<number> {
     try {
-      const redis = RedisConfig.getClient();
-      await redis.setEx(key, ttl, JSON.stringify(data));
-      this.logger.debug(`Cache set for key: ${key} with TTL: ${ttl}s`);
-    } catch (error) {
-      this.logger.error('Cache set failed:', error);
-    }
-  }
-
-  /**
-   * Delete cached data
-   */
-  static async delete(key: string): Promise<void> {
-    try {
-      const redis = RedisConfig.getClient();
-      await redis.del(key);
-      this.logger.debug(`Cache deleted for key: ${key}`);
-    } catch (error) {
-      this.logger.error('Cache delete failed:', error);
-    }
-  }
-
-  /**
-   * Delete multiple keys by pattern
-   */
-  static async deleteByPattern(pattern: string): Promise<void> {
-    try {
-      const redis = RedisConfig.getClient();
-      const keys = await redis.keys(pattern);
-      
+      const keys = await this.redisClient.keys(pattern);
       if (keys.length > 0) {
-        await redis.del(keys);
-        this.logger.debug(`Cache deleted ${keys.length} keys matching pattern: ${pattern}`);
+        return await this.redisClient.del(...keys);
       }
+      return 0;
     } catch (error) {
-      this.logger.error('Cache delete by pattern failed:', error);
+      this.logger.error(`Cache CLEARPATTERN error for pattern ${pattern}:`, error);
+      return 0;
     }
   }
 
   /**
-   * Cache user chatrooms
+   * Clear all cache
    */
-  static async getCachedUserChatrooms(userId: string, page: number, limit: number): Promise<any | null> {
-    const key = this.getUserChatroomsKey(userId, page, limit);
-    return this.get(key);
-  }
-
-  /**
-   * Set cached user chatrooms
-   */
-  static async setCachedUserChatrooms(userId: string, page: number, limit: number, data: any): Promise<void> {
-    const key = this.getUserChatroomsKey(userId, page, limit);
-    await this.set(key, data, this.TTL.USER_CHATROOMS);
-  }
-
-  /**
-   * Cache chatroom details
-   */
-  static async getCachedChatroomDetail(chatroomId: string, messagesPage: number, messagesLimit: number): Promise<any | null> {
-    const key = this.getChatroomDetailKey(chatroomId, messagesPage, messagesLimit);
-    return this.get(key);
-  }
-
-  /**
-   * Set cached chatroom details
-   */
-  static async setCachedChatroomDetail(chatroomId: string, messagesPage: number, messagesLimit: number, data: any): Promise<void> {
-    const key = this.getChatroomDetailKey(chatroomId, messagesPage, messagesLimit);
-    await this.set(key, data, this.TTL.CHATROOM_DETAIL);
-  }
-
-  /**
-   * Cache chatroom search results
-   */
-  static async getCachedChatroomSearch(userId: string, query: string, page: number, limit: number): Promise<any | null> {
-    const key = this.getChatroomSearchKey(userId, query, page, limit);
-    return this.get(key);
-  }
-
-  /**
-   * Set cached chatroom search results
-   */
-  static async setCachedChatroomSearch(userId: string, query: string, page: number, limit: number, data: any): Promise<void> {
-    const key = this.getChatroomSearchKey(userId, query, page, limit);
-    await this.set(key, data, this.TTL.CHATROOM_SEARCH);
-  }
-
-  /**
-   * Cache chatroom stats
-   */
-  static async getCachedChatroomStats(userId: string): Promise<any | null> {
-    const key = this.getChatroomStatsKey(userId);
-    return this.get(key);
-  }
-
-  /**
-   * Set cached chatroom stats
-   */
-  static async setCachedChatroomStats(userId: string, data: any): Promise<void> {
-    const key = this.getChatroomStatsKey(userId);
-    await this.set(key, data, this.TTL.CHATROOM_STATS);
-  }
-
-  /**
-   * Cache message stats
-   */
-  static async getCachedMessageStats(chatroomId: string): Promise<any | null> {
-    const key = this.getMessageStatsKey(chatroomId);
-    return this.get(key);
-  }
-
-  /**
-   * Set cached message stats
-   */
-  static async setCachedMessageStats(chatroomId: string, data: any): Promise<void> {
-    const key = this.getMessageStatsKey(chatroomId);
-    await this.set(key, data, this.TTL.MESSAGE_STATS);
-  }
-
-  /**
-   * Invalidate all cache entries for a user
-   */
-  static async invalidateUserCache(userId: string): Promise<void> {
-    await Promise.all([
-      this.deleteByPattern(`${this.KEYS.USER_CHATROOMS}:${userId}:*`),
-      this.deleteByPattern(`${this.KEYS.CHATROOM_SEARCH}:${userId}:*`),
-      this.deleteByPattern(`${this.KEYS.CHATROOM_STATS}:${userId}`),
-    ]);
-    this.logger.info(`Invalidated cache for user: ${userId}`);
-  }
-
-  /**
-   * Invalidate all cache entries for a chatroom
-   */
-  static async invalidateChatroomCache(chatroomId: string, userId: string): Promise<void> {
-    await Promise.all([
-      this.deleteByPattern(`${this.KEYS.CHATROOM_DETAIL}:${chatroomId}:*`),
-      this.deleteByPattern(`${this.KEYS.MESSAGE_STATS}:${chatroomId}`),
-      this.invalidateUserCache(userId), // Invalidate user's chatroom listings
-    ]);
-    this.logger.info(`Invalidated cache for chatroom: ${chatroomId}`);
-  }
-
-  /**
-   * Invalidate cache when a message is added/deleted
-   */
-  static async invalidateMessageCache(chatroomId: string, userId: string): Promise<void> {
-    await Promise.all([
-      // Invalidate chatroom details (affects message counts and last message)
-      this.deleteByPattern(`${this.KEYS.CHATROOM_DETAIL}:${chatroomId}:*`),
-      // Invalidate message stats
-      this.deleteByPattern(`${this.KEYS.MESSAGE_STATS}:${chatroomId}`),
-      // Invalidate user's chatroom listings (affects last message display)
-      this.deleteByPattern(`${this.KEYS.USER_CHATROOMS}:${userId}:*`),
-      // Invalidate user's chatroom stats
-      this.deleteByPattern(`${this.KEYS.CHATROOM_STATS}:${userId}`),
-    ]);
-    this.logger.info(`Invalidated message cache for chatroom: ${chatroomId}`);
-  }
-
-  /**
-   * Clear all cache entries (for maintenance)
-   */
-  static async clearAllCache(): Promise<void> {
+  static async flushAll(): Promise<void> {
     try {
-      const redis = RedisConfig.getClient();
-      await redis.flushDb();
-      this.logger.info('All cache cleared');
+      await this.redisClient.flushall();
+      this.logger.info('Cache cleared');
     } catch (error) {
-      this.logger.error('Clear all cache failed:', error);
+      this.logger.error('Cache FLUSHALL error:', error);
+      throw error;
     }
   }
 
   /**
    * Get cache statistics
    */
-  static async getCacheStats(): Promise<{
-    totalKeys: number;
-    chatroomKeys: number;
-    messageKeys: number;
-    userKeys: number;
-  }> {
+  static async getStats(): Promise<any> {
     try {
-      const redis = RedisConfig.getClient();
-      const allKeys = await redis.keys('*');
+      const info = await this.redisClient.info();
+      const keys = await this.redisClient.dbsize();
       
       return {
-        totalKeys: allKeys.length,
-        chatroomKeys: allKeys.filter(key => key.startsWith('chatroom:')).length,
-        messageKeys: allKeys.filter(key => key.startsWith('message:')).length,
-        userKeys: allKeys.filter(key => key.startsWith('user:')).length,
+        keys,
+        info: info.split('\r\n').reduce((acc: any, line: string) => {
+          if (line.includes(':')) {
+            const [key, value] = line.split(':');
+            if (key) {
+              acc[key] = value;
+            }
+          }
+          return acc;
+        }, {}),
       };
     } catch (error) {
-      this.logger.error('Get cache stats failed:', error);
-      return { totalKeys: 0, chatroomKeys: 0, messageKeys: 0, userKeys: 0 };
+      this.logger.error('Cache stats error:', error);
+      return null;
     }
   }
 
   /**
-   * Get all cache keys
+   * Health check
    */
+  static async healthCheck(): Promise<boolean> {
+    try {
+      await this.redisClient.ping();
+      return true;
+    } catch (error) {
+      this.logger.error('Cache health check failed:', error);
+      return false;
+    }
+  }
+
+  // Chatroom-specific cache methods
+  static async invalidateUserCache(userId: string): Promise<void> {
+    try {
+      await this.clearPattern(`user:${userId}:*`);
+      this.logger.debug(`Invalidated cache for user: ${userId}`);
+    } catch (error) {
+      this.logger.error(`Failed to invalidate user cache for ${userId}:`, error);
+    }
+  }
+
+  static async invalidateChatroomCache(chatroomId: string, userId: string): Promise<void> {
+    try {
+      await this.clearPattern(`chatroom:${chatroomId}:*`);
+      await this.clearPattern(`user:${userId}:chatrooms:*`);
+      this.logger.debug(`Invalidated cache for chatroom: ${chatroomId}`);
+    } catch (error) {
+      this.logger.error(`Failed to invalidate chatroom cache for ${chatroomId}:`, error);
+    }
+  }
+
+  static async getCachedUserChatrooms(userId: string, page: number, limit: number): Promise<any> {
+    const key = `user:${userId}:chatrooms:${page}:${limit}`;
+    return await this.getJson(key);
+  }
+
+  static async setCachedUserChatrooms(userId: string, page: number, limit: number, data: any): Promise<void> {
+    const key = `user:${userId}:chatrooms:${page}:${limit}`;
+    await this.setJson(key, data, 300); // 5 minutes TTL
+  }
+
+  static async getCachedChatroomDetail(chatroomId: string, page: number, limit: number): Promise<any> {
+    const key = `chatroom:${chatroomId}:detail:${page}:${limit}`;
+    return await this.getJson(key);
+  }
+
+  static async setCachedChatroomDetail(chatroomId: string, page: number, limit: number, data: any): Promise<void> {
+    const key = `chatroom:${chatroomId}:detail:${page}:${limit}`;
+    await this.setJson(key, data, 300); // 5 minutes TTL
+  }
+
+  static async getCachedChatroomStats(userId: string): Promise<any> {
+    const key = `user:${userId}:stats`;
+    return await this.getJson(key);
+  }
+
+  static async setCachedChatroomStats(userId: string, data: any): Promise<void> {
+    const key = `user:${userId}:stats`;
+    await this.setJson(key, data, 600); // 10 minutes TTL
+  }
+
+  static async getCachedChatroomSearch(userId: string, query: string, page: number, limit: number): Promise<any> {
+    const key = `user:${userId}:search:${query}:${page}:${limit}`;
+    return await this.getJson(key);
+  }
+
+  static async setCachedChatroomSearch(userId: string, query: string, page: number, limit: number, data: any): Promise<void> {
+    const key = `user:${userId}:search:${query}:${page}:${limit}`;
+    await this.setJson(key, data, 300); // 5 minutes TTL
+  }
+
+  // Message-specific cache methods
+  static async invalidateMessageCache(chatroomId: string, userId: string): Promise<void> {
+    try {
+      await this.clearPattern(`message:${chatroomId}:*`);
+      await this.clearPattern(`chatroom:${chatroomId}:messages:*`);
+      this.logger.debug(`Invalidated cache for messages in chatroom: ${chatroomId}`);
+    } catch (error) {
+      this.logger.error(`Failed to invalidate message cache for ${chatroomId}:`, error);
+    }
+  }
+
+  static async getCachedMessageStats(chatroomId: string): Promise<any> {
+    const key = `message:${chatroomId}:stats`;
+    return await this.getJson(key);
+  }
+
+  static async setCachedMessageStats(chatroomId: string, data: any): Promise<void> {
+    const key = `message:${chatroomId}:stats`;
+    await this.setJson(key, data, 600); // 10 minutes TTL
+  }
+
+  // Additional cache utility methods
+  static async getCacheStats(): Promise<any> {
+    return await this.getStats();
+  }
+
+  static async clearAllCache(): Promise<void> {
+    return await this.flushAll();
+  }
+
   static async getCacheKeys(): Promise<string[]> {
     try {
-      const redis = RedisConfig.getClient();
-      const keys = await redis.keys('*');
-      return keys;
+      return await this.redisClient.keys('*');
     } catch (error) {
       this.logger.error('Get cache keys failed:', error);
       return [];
     }
   }
 
-  /**
-   * Delete specific cache key
-   */
-  static async deleteCacheKey(key: string): Promise<void> {
-    try {
-      const redis = RedisConfig.getClient();
-      await redis.del(key);
-      this.logger.debug(`Cache key deleted: ${key}`);
-    } catch (error) {
-      this.logger.error('Delete cache key failed:', error);
-    }
+  static async deleteCacheKey(key: string): Promise<number> {
+    return await this.del(key);
   }
 } 

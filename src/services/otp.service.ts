@@ -2,6 +2,7 @@ import { DatabaseConfig } from '../config/database.config';
 import { ValidationError, NotFoundError } from '../middleware/error.middleware';
 import { Logger } from '../utils/logger';
 import { RedisConfig } from '../config/redis.config';
+import { CacheService } from '../services/cache.service';
 
 interface OTPData {
   id: string;
@@ -67,7 +68,7 @@ export class OTPService {
 
       // Cache OTP in Redis for faster lookup
       const cacheKey = `otp:${mobileNumber}:${purpose}`;
-      await RedisConfig.setJson(cacheKey, {
+      await CacheService.setJson(cacheKey, {
         otpCode,
         expiresAt: expiresAt.toISOString(),
         purpose
@@ -98,7 +99,7 @@ export class OTPService {
 
       // First check Redis cache
       const cacheKey = `otp:${mobileNumber}:${purpose}`;
-      const cachedOTP = await RedisConfig.getJson<{
+      const cachedOTP = await CacheService.getJson<{
         otpCode: string;
         expiresAt: string;
         purpose: string;
@@ -107,7 +108,7 @@ export class OTPService {
       if (cachedOTP) {
         const isExpired = new Date(cachedOTP.expiresAt) < new Date();
         if (isExpired) {
-          await RedisConfig.del(cacheKey);
+          await CacheService.del(cacheKey);
           return { isValid: false };
         }
 
@@ -141,7 +142,7 @@ export class OTPService {
       });
 
       // Remove from cache
-      await RedisConfig.del(cacheKey);
+      await CacheService.del(cacheKey);
 
       this.logger.info(`OTP verified successfully for ${mobileNumber} (${purpose})`);
       

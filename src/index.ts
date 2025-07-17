@@ -83,9 +83,15 @@ const startServer = async () => {
     await DatabaseConfig.initialize();
     logger.info('Database connection established');
 
-    // Initialize Redis connection
-    await RedisConfig.initialize();
-    logger.info('Redis connection established');
+    // Initialize Redis
+    try {
+      const redisClient = RedisConfig.getRedisClient();
+      await redisClient.ping();
+      logger.info('Redis connected successfully');
+    } catch (error) {
+      logger.error('Redis connection failed:', error);
+      process.exit(1);
+    }
 
     // Initialize queue service
     const queueService = QueueService.getInstance();
@@ -123,9 +129,8 @@ process.on('SIGTERM', async () => {
   const queueService = QueueService.getInstance();
   await queueService.shutdown();
   
-  // Then shutdown database and Redis
+  // Then shutdown database
   await DatabaseConfig.disconnect();
-  await RedisConfig.disconnect();
   
   process.exit(0);
 });
@@ -140,9 +145,8 @@ process.on('SIGINT', async () => {
   const queueService = QueueService.getInstance();
   await queueService.shutdown();
   
-  // Then shutdown database and Redis
+  // Then shutdown database
   await DatabaseConfig.disconnect();
-  await RedisConfig.disconnect();
   
   process.exit(0);
 });

@@ -1,0 +1,1127 @@
+{
+	"info": {
+		"_postman_id": "gemini-chatroom-api",
+		"name": "Gemini Chatroom API",
+		"description": "Complete API collection for Gemini Chatroom Backend with authentication, chatrooms, messages, subscriptions, and AI features",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔍 Health & System",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "User Registration",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\",\n  \"name\": \"Test User\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/signup",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "signup"]
+						}
+					}
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\",\n  \"purpose\": \"login\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/send-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "send-otp"]
+						}
+					}
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\",\n  \"otpCode\": \"123456\",\n  \"purpose\": \"login\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/verify-otp",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "verify-otp"]
+						}
+					}
+				},
+				{
+					"name": "Check Mobile Number",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/check-mobile",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "check-mobile"]
+						}
+					}
+				},
+				{
+					"name": "OTP Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\",\n  \"purpose\": \"login\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/otp-status",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "otp-status"]
+						}
+					}
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "forgot-password"]
+						}
+					}
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobileNumber\": \"9330371885\",\n  \"otpCode\": \"123456\",\n  \"newPassword\": \"newpassword123\",\n  \"confirmPassword\": \"newpassword123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": ["{{base_url}}"],
+							"path": ["auth", "reset-password"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 User Management",
+			"item": [
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/user/me",
+							"host": ["{{base_url}}"],
+							"path": ["user", "me"]
+						}
+					}
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/user/profile",
+							"host": ["{{base_url}}"],
+							"path": ["user", "profile"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💬 Chatrooms",
+			"item": [
+				{
+					"name": "Create Chatroom",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"My Chatroom\",\n  \"description\": \"A test chatroom\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chatroom",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom"]
+						}
+					}
+				},
+				{
+					"name": "Get All Chatrooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom"]
+						}
+					}
+				},
+				{
+					"name": "Get Chatroom Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/stats",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Search Chatrooms",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/search?query=test",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "test"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Chatroom by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Chatroom",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Chatroom Name\",\n  \"description\": \"Updated description\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Chatroom",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💬 Messages",
+			"item": [
+				{
+					"name": "Send Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Hello, this is a test message!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Get Chatroom Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Get Recent Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages/recent",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages", "recent"]
+						}
+					}
+				},
+				{
+					"name": "Get Message History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages/history",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages", "history"]
+						}
+					}
+				},
+				{
+					"name": "Get Message Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages/stats",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Search Messages",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages/search?query=hello",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages", "search"],
+							"query": [
+								{
+									"key": "query",
+									"value": "hello"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Clear Chatroom Messages",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/chatroom/{{chatroom_id}}/messages",
+							"host": ["{{base_url}}"],
+							"path": ["chatroom", "{{chatroom_id}}", "messages"]
+						}
+					}
+				},
+				{
+					"name": "Get Individual Message",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/message/{{message_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["message", "{{message_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Individual Message",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/message/{{message_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["message", "{{message_id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💳 Subscriptions",
+			"item": [
+				{
+					"name": "Get Subscription Plans",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/plans",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "plans"]
+						}
+					}
+				},
+				{
+					"name": "Get Subscription Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/status",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "status"]
+						}
+					}
+				},
+				{
+					"name": "Check Message Permission",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/can-send",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "can-send"]
+						}
+					}
+				},
+				{
+					"name": "Get Usage Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/usage",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "usage"]
+						}
+					}
+				},
+				{
+					"name": "Subscribe to Pro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/pro",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "pro"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/cancel",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "cancel"]
+						}
+					}
+				},
+				{
+					"name": "Reactivate Subscription",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/subscription/reactivate",
+							"host": ["{{base_url}}"],
+							"path": ["subscription", "reactivate"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🤖 Gemini AI",
+			"item": [
+				{
+					"name": "Public Gemini Test",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/gemini/test-public",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "test-public"]
+						}
+					}
+				},
+				{
+					"name": "Gemini Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/gemini/health",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "health"]
+						}
+					}
+				},
+				{
+					"name": "Get Gemini Configuration",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/gemini/config",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "config"]
+						}
+					}
+				},
+				{
+					"name": "Get Model Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/gemini/model-info",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "model-info"]
+						}
+					}
+				},
+				{
+					"name": "Test Gemini Connection",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/gemini/test-connection",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "test-connection"]
+						}
+					}
+				},
+				{
+					"name": "Test Message Generation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Hello, how are you?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/gemini/test-generation",
+							"host": ["{{base_url}}"],
+							"path": ["gemini", "test-generation"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📊 Queue Management",
+			"item": [
+				{
+					"name": "Get Queue Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/stats",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Get Queue Stats by Name",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/stats/gemini-processing",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "stats", "gemini-processing"]
+						}
+					}
+				},
+				{
+					"name": "Get Worker Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/workers/stats",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "workers", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Pause Queue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/pause/gemini-processing",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "pause", "gemini-processing"]
+						}
+					}
+				},
+				{
+					"name": "Resume Queue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/resume/gemini-processing",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "resume", "gemini-processing"]
+						}
+					}
+				},
+				{
+					"name": "Clean Queue",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/clean/gemini-processing",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "clean", "gemini-processing"]
+						}
+					}
+				},
+				{
+					"name": "Enqueue Test Message",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/test/gemini",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "test", "gemini"]
+						}
+					}
+				},
+				{
+					"name": "Queue Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/health",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "health"]
+						}
+					}
+				},
+				{
+					"name": "System Overview",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/queue/overview",
+							"host": ["{{base_url}}"],
+							"path": ["queue", "overview"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🗄️ Cache Management",
+			"item": [
+				{
+					"name": "Get Cache Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/cache/stats",
+							"host": ["{{base_url}}"],
+							"path": ["cache", "stats"]
+						}
+					}
+				},
+				{
+					"name": "Clear All Cache",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cache",
+							"host": ["{{base_url}}"],
+							"path": ["cache"]
+						}
+					}
+				},
+				{
+					"name": "Clear User Cache",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cache/user/{{user_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cache", "user", "{{user_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Clear Chatroom Cache",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cache/chatroom/{{chatroom_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["cache", "chatroom", "{{chatroom_id}}"]
+						}
+					}
+				},
+				{
+					"name": "Warm Up Cache",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/cache/warmup",
+							"host": ["{{base_url}}"],
+							"path": ["cache", "warmup"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🔗 Webhooks",
+			"item": [
+				{
+					"name": "Stripe Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"type\": \"payment_intent.succeeded\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"pi_test_123\",\n      \"amount\": 2000,\n      \"currency\": \"usd\"\n    }\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/webhook/stripe",
+							"host": ["{{base_url}}"],
+							"path": ["webhook", "stripe"]
+						}
+					}
+				},
+				{
+					"name": "Webhook Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/webhook/health",
+							"host": ["{{base_url}}"],
+							"path": ["webhook", "health"]
+						}
+					}
+				},
+				{
+					"name": "Test Webhook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"test\": \"data\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/webhook/test",
+							"host": ["{{base_url}}"],
+							"path": ["webhook", "test"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-extract auth token from verify OTP response",
+					"if (pm.request.url.path.includes('verify-otp')) {",
+					"    pm.test('Extract auth token', function () {",
+					"        const response = pm.response.json();",
+					"        if (response.token) {",
+					"            pm.environment.set('auth_token', response.token);",
+					"            console.log('Auth token extracted and saved');",
+					"        }",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "chatroom_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "message_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+} 

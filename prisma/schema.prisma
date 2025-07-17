@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  mobileNumber      String   @unique @map("mobile_number")
+  passwordHash      String?  @map("password_hash")
+  name              String?
+  subscriptionTier  String   @default("basic") @map("subscription_tier")
+  subscriptionStatus String  @default("active") @map("subscription_status")
+  stripeCustomerId  String?  @map("stripe_customer_id")
+  dailyMessageCount Int      @default(0) @map("daily_message_count")
+  lastMessageDate   DateTime? @map("last_message_date")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  chatrooms Chatroom[]
+  otps      Otp[]
+
+  @@map("users")
+}
+
+model Chatroom {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@map("chatrooms")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  chatroomId  String   @map("chatroom_id")
+  content     String
+  sender      String   // 'user' or 'ai'
+  messageType String   @default("text") @map("message_type")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  chatroom Chatroom @relation(fields: [chatroomId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Otp {
+  id           String   @id @default(cuid())
+  userId       String?  @map("user_id")
+  mobileNumber String   @map("mobile_number")
+  otpCode      String   @map("otp_code")
+  purpose      String   // 'login', 'password_reset'
+  expiresAt    DateTime @map("expires_at")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otps")
+}
+
+model Subscription {
+  id                 String   @id @default(cuid())
+  userId             String   @unique @map("user_id")
+  stripeSubscriptionId String? @unique @map("stripe_subscription_id")
+  stripePriceId      String?  @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map("stripe_current_period_end")
+  stripeCurrentPeriodStart DateTime? @map("stripe_current_period_start")
+  status             String   @default("active") // active, canceled, incomplete, past_due, unpaid
+  tier               String   @default("basic") // basic, pro
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model DailyUsage {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  date          DateTime @default(now())
+  messageCount  Int      @default(0) @map("message_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, date])
+  @@map("daily_usage")
+} 

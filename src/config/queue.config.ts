@@ -33,6 +33,11 @@ export class QueueConfig {
         lazyConnect: true,
       };
       
+      // Add password if present in URL
+      if (url.password) {
+        (result as any).password = url.password;
+      }
+      
       return result;
     } catch (error) {
       this.logger.error('Failed to parse REDIS_URL:', error);

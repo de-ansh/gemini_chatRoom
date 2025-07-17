@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Install OpenSSL and other dependencies
+RUN apk add --no-cache openssl libc6-compat
+
 # Set working directory
 WORKDIR /app
 
